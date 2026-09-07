@@ -1,0 +1,1170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>편광 사진 기반 대기 오염도 탐구 프로그램</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface-2: #edf2f6;
+      --text: #18222d;
+      --muted: #627181;
+      --line: #d8e1e8;
+      --accent: #1f7a8c;
+      --green: #27715e;
+      --yellow: #b7791f;
+      --red: #b42318;
+      --shadow: 0 14px 34px rgba(24, 34, 45, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+      line-height: 1.5;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .header-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 18px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 2.6vw, 2.05rem);
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.1rem;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .subtitle, .muted {
+      color: var(--muted);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 8px;
+      min-height: 44px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .tab-btn[aria-selected="true"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 390px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .fields {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    input[type="number"], input[type="text"], select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text);
+      min-height: 42px;
+      padding: 9px 10px;
+    }
+
+    textarea {
+      min-height: 104px;
+      resize: vertical;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      border: 1px dashed var(--line);
+      border-radius: 7px;
+      background: var(--surface-2);
+      padding: 9px;
+    }
+
+    .inline-fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .check-row {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      font-weight: 700;
+    }
+
+    .check-row input {
+      width: 18px;
+      height: 18px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      min-height: 42px;
+      padding: 9px 12px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .btn-danger {
+      color: var(--red);
+    }
+
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .file-cell {
+      display: grid;
+      gap: 5px;
+    }
+
+    .file-cell span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      overflow-wrap: anywhere;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 92px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+      background: #fff;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .stat strong {
+      font-size: 1.28rem;
+      letter-spacing: 0;
+    }
+
+    .status {
+      border-left: 4px solid var(--accent);
+      background: #fff;
+      border-radius: 7px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .status.good {
+      border-color: var(--green);
+    }
+
+    .status.caution {
+      border-color: var(--yellow);
+    }
+
+    .status.bad {
+      border-color: var(--red);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 820px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+      vertical-align: middle;
+      font-size: 0.92rem;
+    }
+
+    th {
+      color: var(--muted);
+      background: var(--surface-2);
+      font-weight: 700;
+    }
+
+    .number {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    td input[type="number"], td input[type="text"] {
+      min-width: 78px;
+      min-height: 36px;
+      padding: 7px;
+    }
+
+    .group-name {
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .result-box {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-2);
+      margin-top: 12px;
+    }
+
+    .copy-row {
+      width: 100%;
+      min-height: 48px;
+      font-family: Consolas, "Courier New", monospace;
+      white-space: pre-wrap;
+    }
+
+    .chart {
+      width: 100%;
+      min-height: 260px;
+      display: block;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .hidden-canvas {
+      display: none;
+    }
+
+    @media (max-width: 940px) {
+      .grid, .split {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .header-inner, main {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .inline-fields, .file-grid, .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>편광 사진 기반 대기 오염도 탐구 프로그램</h1>
+      <p class="subtitle">창 1에서 학생들이 각도별 사진 밝기를 추출하고, 창 2에서 교사가 조별 밝기값을 직접 모아 DoLP와 오염도 추정값을 산출합니다.</p>
+    </div>
+  </header>
+
+  <main>
+    <nav class="tabs" aria-label="프로그램 창 선택">
+      <button class="tab-btn" id="studentTabBtn" type="button" aria-selected="true" data-target="studentView">창 1 학생용 밝기 추출</button>
+      <button class="tab-btn" id="teacherTabBtn" type="button" aria-selected="false" data-target="teacherView">창 2 교사용 종합 분석</button>
+    </nav>
+
+    <section id="studentView" class="view active">
+      <div class="grid">
+        <section class="panel">
+          <h2>학생용 사진 입력</h2>
+          <div class="fields">
+            <div class="file-grid" id="studentFiles"></div>
+            <div class="actions">
+              <button class="btn btn-primary" id="studentExtractBtn" type="button">밝기 추출</button>
+              <button class="btn" id="studentClearBtn" type="button">학생용 값 비우기</button>
+            </div>
+            <p class="muted" id="studentStatus" aria-live="polite">편광판 각도별 사진 6장을 넣고 밝기를 추출합니다.</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>학생용 결과</h2>
+          <div class="stats">
+            <div class="stat">
+              <span>Imax</span>
+              <strong id="studentImax">-</strong>
+            </div>
+            <div class="stat">
+              <span>Imin</span>
+              <strong id="studentImin">-</strong>
+            </div>
+            <div class="stat">
+              <span>DoLP</span>
+              <strong id="studentDolp">-</strong>
+            </div>
+            <div class="stat">
+              <span>입력 사진</span>
+              <strong id="studentPhotoCount">0/6</strong>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>값</th>
+                  <th class="number">0도</th>
+                  <th class="number">30도</th>
+                  <th class="number">60도</th>
+                  <th class="number">90도</th>
+                  <th class="number">120도</th>
+                  <th class="number">150도</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr id="studentBrightnessRow"></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="result-box">
+            <label for="studentCopyRow">밝기 기록 행</label>
+            <textarea id="studentCopyRow" class="copy-row" readonly></textarea>
+            <div class="actions">
+              <button class="btn" id="copyStudentRowBtn" type="button">행 복사</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="teacherView" class="view">
+      <section class="grid">
+        <div class="panel">
+          <h2>수업 조건</h2>
+          <div class="fields">
+            <div class="field">
+              <label for="stabilityInput">단열선도 판별 결과</label>
+              <select id="stabilityInput">
+                <option value="stable">안정</option>
+                <option value="conditional">조건부 불안정</option>
+                <option value="unstable">불안정</option>
+              </select>
+            </div>
+            <label class="check-row" for="inversionInput">
+              <input id="inversionInput" type="checkbox" checked>
+              역전층 있음
+            </label>
+            <div class="inline-fields">
+              <div class="field">
+                <label for="pm25Input">실제 PM2.5</label>
+                <input id="pm25Input" type="number" min="0" step="0.1" value="35">
+              </div>
+              <div class="field">
+                <label for="pm10Input">실제 PM10</label>
+                <input id="pm10Input" type="number" min="0" step="0.1" value="70">
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn" id="sampleBtn" type="button">예시 수업값 채우기</button>
+              <button class="btn btn-danger" id="clearTeacherBtn" type="button">교사용 표 비우기</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>최종 산출 결과</h2>
+          <div class="stats" aria-live="polite">
+            <div class="stat">
+              <span>평균 DoLP</span>
+              <strong id="avgDolp">-</strong>
+            </div>
+            <div class="stat">
+              <span>표준편차</span>
+              <strong id="stdDolp">-</strong>
+            </div>
+            <div class="stat">
+              <span>추정 PM2.5</span>
+              <strong id="estimatedPm">-</strong>
+            </div>
+            <div class="stat">
+              <span>오염도 등급</span>
+              <strong id="pollutionLevel">-</strong>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <span>보정 샘플 수</span>
+              <strong id="calibrationCount">-</strong>
+            </div>
+            <div class="stat">
+              <span>회귀식</span>
+              <strong id="regressionText">-</strong>
+            </div>
+            <div class="stat">
+              <span>R²</span>
+              <strong id="r2Text">-</strong>
+            </div>
+            <div class="stat">
+              <span>축적 판정</span>
+              <strong id="riskLevel">-</strong>
+            </div>
+          </div>
+          <div class="status" id="interpretation" aria-live="polite">조별 밝기값을 입력하면 최종 해석이 표시됩니다.</div>
+          <svg class="chart" id="groupChart" role="img" aria-label="조별 DoLP 막대그래프"></svg>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>교사용 조별 밝기 표</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>조</th>
+                <th class="number">0도</th>
+                <th class="number">30도</th>
+                <th class="number">60도</th>
+                <th class="number">90도</th>
+                <th class="number">120도</th>
+                <th class="number">150도</th>
+                <th class="number">Imax</th>
+                <th class="number">Imin</th>
+                <th class="number">DoLP</th>
+              </tr>
+            </thead>
+            <tbody id="teacherBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="split">
+        <div class="panel">
+          <h2>보정 샘플</h2>
+          <p class="muted">기본 샘플은 문헌의 DoLP-AOD 범위와 에어코리아 PM2.5 등급을 연결한 수업용 기준입니다. 장치 완성 후 실제 샘플을 추가하면 회귀식이 다시 계산됩니다.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="number">DoLP</th>
+                  <th class="number">PM2.5</th>
+                  <th>출처/구분</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="calibrationBody"></tbody>
+            </table>
+          </div>
+          <div class="actions">
+            <button class="btn" id="addCalibrationBtn" type="button">샘플 추가</button>
+            <button class="btn" id="resetCalibrationBtn" type="button">문헌 기준 복원</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>수업용 기록 표</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>안정도</th>
+                  <th>역전층</th>
+                  <th class="number">실제 PM2.5</th>
+                  <th class="number">평균 DoLP</th>
+                  <th class="number">추정 PM2.5</th>
+                  <th>해석</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td id="recordStability">-</td>
+                  <td id="recordInversion">-</td>
+                  <td class="number" id="recordActualPm">-</td>
+                  <td class="number" id="recordDolp">-</td>
+                  <td class="number" id="recordEstimatedPm">-</td>
+                  <td id="recordText">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <canvas class="hidden-canvas" id="canvas"></canvas>
+
+  <script>
+    const angles = [0, 30, 60, 90, 120, 150];
+    const groupCount = 5;
+    const studentValues = angles.map(() => null);
+    const studentFiles = angles.map(() => null);
+    const teacherValues = Array.from({ length: groupCount }, () => angles.map(() => null));
+    const defaultCalibration = [
+      { dolp: 0.70, pm25: 15, source: "문헌 낮은 AOD + PM 좋음" },
+      { dolp: 0.65, pm25: 25, source: "문헌 범위 보간" },
+      { dolp: 0.60, pm25: 35, source: "문헌 범위 보간" },
+      { dolp: 0.55, pm25: 45, source: "문헌 범위 보간" },
+      { dolp: 0.50, pm25: 55, source: "문헌 범위 보간" },
+      { dolp: 0.45, pm25: 65, source: "문헌 범위 보간" },
+      { dolp: 0.40, pm25: 75, source: "문헌 높은 AOD + PM 나쁨" }
+    ];
+    let calibration = defaultCalibration.map((item) => ({ ...item }));
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const studentFilesWrap = document.getElementById("studentFiles");
+    const studentBrightnessRow = document.getElementById("studentBrightnessRow");
+    const studentStatus = document.getElementById("studentStatus");
+    const studentCopyRow = document.getElementById("studentCopyRow");
+    const teacherBody = document.getElementById("teacherBody");
+    const calibrationBody = document.getElementById("calibrationBody");
+    const groupChart = document.getElementById("groupChart");
+
+    const stabilityInput = document.getElementById("stabilityInput");
+    const inversionInput = document.getElementById("inversionInput");
+    const pm25Input = document.getElementById("pm25Input");
+    const pm10Input = document.getElementById("pm10Input");
+
+    function init() {
+      buildTabs();
+      buildStudentFiles();
+      buildStudentTable();
+      buildTeacherTable();
+      buildCalibrationTable();
+      bindEvents();
+      updateStudent();
+      updateTeacher();
+    }
+
+    function buildTabs() {
+      document.querySelectorAll(".tab-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach((btn) => btn.setAttribute("aria-selected", "false"));
+          document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
+          button.setAttribute("aria-selected", "true");
+          document.getElementById(button.dataset.target).classList.add("active");
+          drawGroupChart();
+        });
+      });
+    }
+
+    function buildStudentFiles() {
+      studentFilesWrap.innerHTML = "";
+      angles.forEach((angle, angleIndex) => {
+        const cell = document.createElement("div");
+        cell.className = "file-cell";
+        const label = document.createElement("label");
+        label.htmlFor = `student-file-${angle}`;
+        label.textContent = `${angle}도 사진`;
+        const input = document.createElement("input");
+        input.id = `student-file-${angle}`;
+        input.type = "file";
+        input.accept = "image/*";
+        input.addEventListener("change", () => {
+          studentFiles[angleIndex] = input.files[0] || null;
+          updateStudent();
+        });
+        const name = document.createElement("span");
+        name.id = `student-file-name-${angleIndex}`;
+        name.textContent = "미선택";
+        cell.append(label, input, name);
+        studentFilesWrap.appendChild(cell);
+      });
+    }
+
+    function buildStudentTable() {
+      studentBrightnessRow.innerHTML = "";
+      const header = document.createElement("td");
+      header.className = "group-name";
+      header.textContent = "밝기";
+      studentBrightnessRow.appendChild(header);
+      angles.forEach((angle, angleIndex) => {
+        const cell = document.createElement("td");
+        cell.className = "number";
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.max = "255";
+        input.step = "0.1";
+        input.setAttribute("aria-label", `학생용 ${angle}도 밝기`);
+        input.addEventListener("input", () => {
+          const value = Number(input.value);
+          studentValues[angleIndex] = Number.isFinite(value) ? value : null;
+          updateStudent();
+        });
+        cell.appendChild(input);
+        studentBrightnessRow.appendChild(cell);
+      });
+    }
+
+    function buildTeacherTable() {
+      teacherBody.innerHTML = "";
+      for (let groupIndex = 0; groupIndex < groupCount; groupIndex += 1) {
+        const row = document.createElement("tr");
+        const groupCell = document.createElement("td");
+        groupCell.className = "group-name";
+        groupCell.textContent = `${groupIndex + 1}조`;
+        row.appendChild(groupCell);
+        angles.forEach((angle, angleIndex) => {
+          const cell = document.createElement("td");
+          cell.className = "number";
+          const input = document.createElement("input");
+          input.type = "number";
+          input.min = "0";
+          input.max = "255";
+          input.step = "0.1";
+          input.setAttribute("aria-label", `${groupIndex + 1}조 ${angle}도 밝기`);
+          input.addEventListener("input", () => {
+            const value = Number(input.value);
+            teacherValues[groupIndex][angleIndex] = Number.isFinite(value) ? value : null;
+            updateTeacher();
+          });
+          cell.appendChild(input);
+          row.appendChild(cell);
+        });
+        ["imax", "imin", "dolp"].forEach((name) => {
+          const cell = document.createElement("td");
+          cell.className = "number";
+          cell.dataset.result = name;
+          row.appendChild(cell);
+        });
+        teacherBody.appendChild(row);
+      }
+    }
+
+    function buildCalibrationTable() {
+      calibrationBody.innerHTML = "";
+      calibration.forEach((sample, index) => {
+        const row = document.createElement("tr");
+        row.appendChild(makeCalibrationNumberCell(sample, "dolp", index, 0.001));
+        row.appendChild(makeCalibrationNumberCell(sample, "pm25", index, 0.1));
+        const sourceCell = document.createElement("td");
+        const sourceInput = document.createElement("input");
+        sourceInput.type = "text";
+        sourceInput.value = sample.source;
+        sourceInput.addEventListener("input", () => {
+          calibration[index].source = sourceInput.value;
+        });
+        sourceCell.appendChild(sourceInput);
+        row.appendChild(sourceCell);
+        const actionCell = document.createElement("td");
+        const remove = document.createElement("button");
+        remove.className = "btn btn-danger";
+        remove.type = "button";
+        remove.textContent = "삭제";
+        remove.addEventListener("click", () => {
+          calibration.splice(index, 1);
+          buildCalibrationTable();
+          updateTeacher();
+        });
+        actionCell.appendChild(remove);
+        row.appendChild(actionCell);
+        calibrationBody.appendChild(row);
+      });
+    }
+
+    function makeCalibrationNumberCell(sample, key, index, step) {
+      const cell = document.createElement("td");
+      cell.className = "number";
+      const input = document.createElement("input");
+      input.type = "number";
+      input.step = String(step);
+      input.value = sample[key];
+      input.addEventListener("input", () => {
+        const value = Number(input.value);
+        calibration[index][key] = Number.isFinite(value) ? value : null;
+        updateTeacher();
+      });
+      cell.appendChild(input);
+      return cell;
+    }
+
+    function bindEvents() {
+      document.getElementById("studentExtractBtn").addEventListener("click", extractStudentBrightness);
+      document.getElementById("studentClearBtn").addEventListener("click", clearStudent);
+      document.getElementById("copyStudentRowBtn").addEventListener("click", copyStudentRow);
+      document.getElementById("sampleBtn").addEventListener("click", fillTeacherSample);
+      document.getElementById("clearTeacherBtn").addEventListener("click", clearTeacher);
+      document.getElementById("addCalibrationBtn").addEventListener("click", addCalibrationSample);
+      document.getElementById("resetCalibrationBtn").addEventListener("click", resetCalibration);
+      [stabilityInput, inversionInput, pm25Input, pm10Input].forEach((el) => {
+        el.addEventListener("input", updateTeacher);
+        el.addEventListener("change", updateTeacher);
+      });
+      window.addEventListener("resize", drawGroupChart);
+    }
+
+    function groupStats(values) {
+      const valid = values.filter((value) => Number.isFinite(value));
+      if (valid.length < 2) return null;
+      const max = Math.max(...valid);
+      const min = Math.min(...valid);
+      const dolp = max + min > 0 ? (max - min) / (max + min) : null;
+      return { max, min, dolp };
+    }
+
+    function mean(values) {
+      return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+    }
+
+    function std(values) {
+      if (values.length < 2) return null;
+      const avg = mean(values);
+      const variance = values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / (values.length - 1);
+      return Math.sqrt(variance);
+    }
+
+    function format(value, digits = 3) {
+      return Number.isFinite(value) ? value.toFixed(digits) : "-";
+    }
+
+    function updateStudent() {
+      studentFiles.forEach((file, index) => {
+        const name = document.getElementById(`student-file-name-${index}`);
+        if (name) name.textContent = file ? file.name : "미선택";
+      });
+      const inputs = studentBrightnessRow.querySelectorAll("input");
+      inputs.forEach((input, index) => {
+        const active = document.activeElement === input;
+        const value = studentValues[index];
+        if (!active) input.value = Number.isFinite(value) ? value.toFixed(1) : "";
+      });
+      const stats = groupStats(studentValues);
+      document.getElementById("studentImax").textContent = stats ? stats.max.toFixed(1) : "-";
+      document.getElementById("studentImin").textContent = stats ? stats.min.toFixed(1) : "-";
+      document.getElementById("studentDolp").textContent = stats ? stats.dolp.toFixed(3) : "-";
+      document.getElementById("studentPhotoCount").textContent = `${studentFiles.filter(Boolean).length}/6`;
+      studentCopyRow.value = makeStudentRowText();
+    }
+
+    function updateTeacher() {
+      syncTeacherInputs();
+      [...teacherBody.rows].forEach((row, groupIndex) => {
+        const stats = groupStats(teacherValues[groupIndex]);
+        const cells = row.querySelectorAll("[data-result]");
+        cells[0].textContent = stats ? stats.max.toFixed(1) : "-";
+        cells[1].textContent = stats ? stats.min.toFixed(1) : "-";
+        cells[2].textContent = stats ? stats.dolp.toFixed(3) : "-";
+      });
+      const dolps = teacherValues.map(groupStats).map((stats) => stats && stats.dolp).filter(Number.isFinite);
+      const avgDolp = mean(dolps);
+      const regression = calculateRegression();
+      const estimatedPm = estimatePm(avgDolp, regression);
+      const hasAverage = Number.isFinite(avgDolp);
+      const estimatedGrade = hasAverage ? classifyPm(estimatedPm, NaN) : { label: "-", score: 0 };
+      const actualGrade = classifyPm(Number(pm25Input.value), Number(pm10Input.value));
+      const risk = hasAverage ? classifyRisk(avgDolp, Math.max(estimatedGrade.score, actualGrade.score)) : { label: "-", className: "" };
+
+      document.getElementById("avgDolp").textContent = format(avgDolp);
+      document.getElementById("stdDolp").textContent = format(std(dolps));
+      document.getElementById("estimatedPm").textContent = Number.isFinite(estimatedPm) ? estimatedPm.toFixed(1) : "-";
+      document.getElementById("pollutionLevel").textContent = estimatedGrade.label;
+      document.getElementById("calibrationCount").textContent = String(regression.count);
+      document.getElementById("regressionText").textContent = regression.valid ? `PM=${regression.intercept.toFixed(1)}${regression.slope < 0 ? "" : "+"}${regression.slope.toFixed(1)}D` : "-";
+      document.getElementById("r2Text").textContent = Number.isFinite(regression.r2) ? regression.r2.toFixed(3) : "-";
+      document.getElementById("riskLevel").textContent = risk.label;
+      const interpretation = document.getElementById("interpretation");
+      interpretation.className = `status ${risk.className}`;
+      interpretation.textContent = makeInterpretation(avgDolp, estimatedPm, estimatedGrade, actualGrade, risk, regression);
+      updateRecord(avgDolp, estimatedPm, estimatedGrade, risk);
+      drawGroupChart();
+    }
+
+    function syncTeacherInputs() {
+      [...teacherBody.rows].forEach((row, groupIndex) => {
+        const inputs = row.querySelectorAll("input");
+        inputs.forEach((input, angleIndex) => {
+          if (document.activeElement === input) return;
+          const value = teacherValues[groupIndex][angleIndex];
+          input.value = Number.isFinite(value) ? value.toFixed(1) : "";
+        });
+      });
+    }
+
+    function calculateRegression() {
+      const points = calibration.filter((sample) => Number.isFinite(sample.dolp) && Number.isFinite(sample.pm25));
+      const count = points.length;
+      if (count < 2) return { valid: false, count, slope: null, intercept: null, r2: null };
+      const xMean = mean(points.map((point) => point.dolp));
+      const yMean = mean(points.map((point) => point.pm25));
+      const sxx = points.reduce((sum, point) => sum + (point.dolp - xMean) ** 2, 0);
+      if (sxx === 0) return { valid: false, count, slope: null, intercept: null, r2: null };
+      const sxy = points.reduce((sum, point) => sum + (point.dolp - xMean) * (point.pm25 - yMean), 0);
+      const slope = sxy / sxx;
+      const intercept = yMean - slope * xMean;
+      const ssTot = points.reduce((sum, point) => sum + (point.pm25 - yMean) ** 2, 0);
+      const ssRes = points.reduce((sum, point) => {
+        const predicted = intercept + slope * point.dolp;
+        return sum + (point.pm25 - predicted) ** 2;
+      }, 0);
+      const r2 = ssTot === 0 ? null : 1 - ssRes / ssTot;
+      return { valid: true, count, slope, intercept, r2 };
+    }
+
+    function estimatePm(avgDolp, regression) {
+      if (!Number.isFinite(avgDolp) || !regression.valid) return null;
+      const raw = regression.intercept + regression.slope * avgDolp;
+      return Math.max(0, Math.min(200, raw));
+    }
+
+    function classifyPm(pm25, pm10) {
+      const pm25Score = !Number.isFinite(pm25) ? 0 : pm25 > 75 ? 3 : pm25 > 35 ? 2 : pm25 > 15 ? 1 : 0;
+      const pm10Score = !Number.isFinite(pm10) ? 0 : pm10 > 150 ? 3 : pm10 > 80 ? 2 : pm10 > 30 ? 1 : 0;
+      const score = Math.max(pm25Score, pm10Score);
+      return [
+        { label: "좋음", score },
+        { label: "보통", score },
+        { label: "나쁨", score },
+        { label: "매우 나쁨", score }
+      ][score];
+    }
+
+    function classifyRisk(avgDolp, pmScore) {
+      let score = 0;
+      if (stabilityInput.value === "stable") score += 1;
+      if (inversionInput.checked) score += 1;
+      if (Number.isFinite(avgDolp) && avgDolp < 0.40) score += 2;
+      else if (Number.isFinite(avgDolp) && avgDolp < 0.55) score += 1;
+      if (pmScore >= 2) score += 2;
+      else if (pmScore === 1) score += 1;
+      if (score >= 5) return { label: "큼", className: "bad" };
+      if (score >= 3) return { label: "중간", className: "caution" };
+      return { label: "작음", className: "good" };
+    }
+
+    function makeInterpretation(avgDolp, estimatedPm, estimatedGrade, actualGrade, risk, regression) {
+      if (!Number.isFinite(avgDolp)) {
+        return "학생들이 추출한 밝기값을 교사용 표에 넣으면 평균 DoLP와 오염도 추정값이 계산됩니다.";
+      }
+      if (!regression.valid) {
+        return "보정 샘플이 2개 이상 필요합니다. 보정 샘플을 복원하거나 실제 측정 샘플을 추가하세요.";
+      }
+      const stabilityText = stabilityInput.options[stabilityInput.selectedIndex].textContent;
+      const inversionText = inversionInput.checked ? "역전층 있음" : "역전층 없음";
+      return `5개 조 자료의 평균 DoLP는 ${avgDolp.toFixed(3)}이고, 보정 샘플 ${regression.count}개로 만든 회귀식에서 추정 PM2.5는 ${estimatedPm.toFixed(1)}입니다. 추정 오염도는 ${estimatedGrade.label}, 실제 PM 기준 등급은 ${actualGrade.label}입니다. 단열선도 결과(${stabilityText}, ${inversionText})와 함께 보면 에어로졸 축적 가능성은 ${risk.label}으로 해석됩니다.`;
+    }
+
+    function updateRecord(avgDolp, estimatedPm, estimatedGrade, risk) {
+      document.getElementById("recordStability").textContent = stabilityInput.options[stabilityInput.selectedIndex].textContent;
+      document.getElementById("recordInversion").textContent = inversionInput.checked ? "있음" : "없음";
+      document.getElementById("recordActualPm").textContent = pm25Input.value || "-";
+      document.getElementById("recordDolp").textContent = format(avgDolp);
+      document.getElementById("recordEstimatedPm").textContent = Number.isFinite(estimatedPm) ? estimatedPm.toFixed(1) : "-";
+      document.getElementById("recordText").textContent = Number.isFinite(avgDolp) ? `추정 ${estimatedGrade.label}, 축적 가능성 ${risk.label}` : "-";
+    }
+
+    async function extractStudentBrightness() {
+      if (!studentFiles.some(Boolean)) {
+        studentStatus.textContent = "사진이 선택되지 않았습니다. 사진을 넣거나 밝기값을 직접 입력하세요.";
+        return;
+      }
+      studentStatus.textContent = "사진 중앙 ROI의 평균 밝기를 추출하는 중입니다.";
+      for (let index = 0; index < studentFiles.length; index += 1) {
+        if (studentFiles[index]) {
+          studentValues[index] = await extractBrightness(studentFiles[index]);
+        }
+      }
+      updateStudent();
+      studentStatus.textContent = "밝기 추출이 끝났습니다. 밝기 기록 행을 보고 학습지나 교사용 표에 옮겨 적으면 됩니다.";
+    }
+
+    function extractBrightness(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxSide = 1000;
+          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const roiW = Math.round(canvas.width * 0.34);
+          const roiH = Math.round(canvas.height * 0.34);
+          const x0 = Math.round((canvas.width - roiW) / 2);
+          const y0 = Math.round((canvas.height - roiH) / 2);
+          const data = ctx.getImageData(x0, y0, roiW, roiH).data;
+          let sum = 0;
+          let count = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+            count += 1;
+          }
+          URL.revokeObjectURL(img.src);
+          resolve(sum / count);
+        };
+        img.onerror = () => reject(new Error("이미지를 읽을 수 없습니다."));
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    function makeStudentRowText() {
+      const values = studentValues.map((value) => Number.isFinite(value) ? value.toFixed(1) : "");
+      return values.join(",");
+    }
+
+    async function copyStudentRow() {
+      studentCopyRow.select();
+      try {
+        await navigator.clipboard.writeText(studentCopyRow.value);
+        studentStatus.textContent = "밝기 기록 행을 복사했습니다.";
+      } catch {
+        document.execCommand("copy");
+        studentStatus.textContent = "밝기 기록 행을 선택했습니다.";
+      }
+    }
+
+    function clearStudent() {
+      studentValues.fill(null);
+      studentFiles.fill(null);
+      buildStudentFiles();
+      updateStudent();
+      studentStatus.textContent = "학생용 사진과 밝기값을 비웠습니다.";
+    }
+
+    function fillTeacherSample() {
+      const samples = [
+        [122, 104, 92, 126, 148, 139],
+        [119, 102, 90, 124, 146, 136],
+        [125, 107, 95, 129, 151, 142],
+        [117, 101, 89, 123, 143, 135],
+        [121, 105, 93, 127, 149, 140]
+      ];
+      samples.forEach((row, groupIndex) => {
+        row.forEach((value, angleIndex) => {
+          teacherValues[groupIndex][angleIndex] = value;
+        });
+      });
+      updateTeacher();
+    }
+
+    function clearTeacher() {
+      teacherValues.forEach((row) => row.fill(null));
+      updateTeacher();
+    }
+
+    function addCalibrationSample() {
+      calibration.push({ dolp: 0.52, pm25: 50, source: "사용자 샘플" });
+      buildCalibrationTable();
+      updateTeacher();
+    }
+
+    function resetCalibration() {
+      calibration = defaultCalibration.map((item) => ({ ...item }));
+      buildCalibrationTable();
+      updateTeacher();
+    }
+
+    function drawGroupChart() {
+      const rect = groupChart.getBoundingClientRect();
+      const width = Math.max(320, rect.width || 720);
+      const height = 260;
+      const margin = { top: 18, right: 16, bottom: 42, left: 54 };
+      groupChart.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      groupChart.innerHTML = "";
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const dolps = teacherValues.map(groupStats).map((stats) => stats && stats.dolp);
+      const finiteDolps = dolps.filter(Number.isFinite);
+      const maxY = Math.max(0.75, finiteDolps.length ? Math.max(...finiteDolps) : 0);
+
+      groupChart.appendChild(svgEl("rect", {
+        x: margin.left,
+        y: margin.top,
+        width: plotW,
+        height: plotH,
+        fill: "none",
+        stroke: "#d8e1e8"
+      }));
+      [0, 0.2, 0.4, 0.6].forEach((tick) => {
+        const y = margin.top + plotH - tick / maxY * plotH;
+        groupChart.appendChild(svgEl("line", {
+          x1: margin.left,
+          x2: margin.left + plotW,
+          y1: y,
+          y2: y,
+          stroke: "#d8e1e8"
+        }));
+        const label = svgEl("text", {
+          x: margin.left - 8,
+          y: y + 4,
+          "text-anchor": "end",
+          fill: "#627181",
+          "font-size": "12"
+        });
+        label.textContent = tick.toFixed(1);
+        groupChart.appendChild(label);
+      });
+
+      dolps.forEach((value, index) => {
+        const center = margin.left + (index + 0.5) * plotW / groupCount;
+        const barWidth = plotW / groupCount * 0.58;
+        const barHeight = Number.isFinite(value) ? value / maxY * plotH : 0;
+        const x = center - barWidth / 2;
+        const y = margin.top + plotH - barHeight;
+        groupChart.appendChild(svgEl("rect", {
+          x,
+          y,
+          width: barWidth,
+          height: barHeight,
+          rx: 3,
+          fill: "#1f7a8c"
+        }));
+        const group = svgEl("text", {
+          x: center,
+          y: height - 16,
+          "text-anchor": "middle",
+          fill: "#18222d",
+          "font-size": "12"
+        });
+        group.textContent = `${index + 1}조`;
+        groupChart.appendChild(group);
+        if (Number.isFinite(value)) {
+          const label = svgEl("text", {
+            x: center,
+            y: Math.max(14, y - 6),
+            "text-anchor": "middle",
+            fill: "#18222d",
+            "font-size": "12"
+          });
+          label.textContent = value.toFixed(3);
+          groupChart.appendChild(label);
+        }
+      });
+
+      const yTitle = svgEl("text", {
+        x: 15,
+        y: margin.top + plotH / 2,
+        transform: `rotate(-90 15 ${margin.top + plotH / 2})`,
+        "text-anchor": "middle",
+        fill: "#18222d",
+        "font-size": "12"
+      });
+      yTitle.textContent = "DoLP";
+      groupChart.appendChild(yTitle);
+    }
+
+    function svgEl(name, attrs) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+      Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+      return el;
+    }
+
+    init();
+  </script>
+</body>
+</html>
